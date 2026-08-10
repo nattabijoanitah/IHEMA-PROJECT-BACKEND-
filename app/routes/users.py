@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify
 
-user_bp = Blueprint("users", __name__)
 
-@user_bp.route("/api/users", methods=["GET"])
+users_bp = Blueprint("users", __name__)
+
+
+@users_bp.route("/api/users", methods=["GET"])
 def get_users():
     return jsonify({
         "message": "Users retrieved successfully"

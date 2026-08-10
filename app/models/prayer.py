@@ -1,0 +1,26 @@
+from datetime import datetime
+
+from app.extensions import db
+
+
+class PrayerRequest(db.Model):
+    __tablename__ = "prayer_requests"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(50))
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default="new")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "message": self.message,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

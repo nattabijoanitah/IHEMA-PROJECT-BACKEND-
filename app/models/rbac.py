@@ -200,6 +200,26 @@ class User(db.Model):
     )
 
 
+    @property
+    def name(self):
+        return self.full_name
+
+
+    @name.setter
+    def name(self, value):
+        self.full_name = value
+
+
+    @property
+    def password(self):
+        raise AttributeError("password is write-only")
+
+
+    @password.setter
+    def password(self, raw_password: str):
+        self.set_password(raw_password)
+
+
     role_id = db.Column(
         db.Integer,
         db.ForeignKey("roles.id"),
@@ -240,9 +260,11 @@ class User(db.Model):
 
     def set_password(self, raw_password: str):
 
+        password_text = str(raw_password or "")
+
         self.password_hash = (
             bcrypt
-            .generate_password_hash(raw_password)
+            .generate_password_hash(password_text)
             .decode("utf-8")
         )
 
@@ -250,9 +272,12 @@ class User(db.Model):
 
     def check_password(self, raw_password: str) -> bool:
 
+        if not self.password_hash:
+            return False
+
         return bcrypt.check_password_hash(
             self.password_hash,
-            raw_password
+            str(raw_password or "")
         )
 
 
@@ -267,6 +292,10 @@ class User(db.Model):
 
 
 
+    def is_admin(self) -> bool:
+        return bool(self.role and self.role.name.lower() in {"admin", "super_admin"})
+
+
     def to_dict(self):
 
         return {
@@ -274,6 +303,8 @@ class User(db.Model):
             "id": self.id,
 
             "full_name": self.full_name,
+
+            "name": self.full_name,
 
             "email": self.email,
 

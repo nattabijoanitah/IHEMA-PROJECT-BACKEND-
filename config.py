@@ -5,6 +5,31 @@ from datetime import timedelta
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
+def get_database_uri():
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        return database_url
+
+    return f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
+
+
+def load_env_from_file():
+    env_path = os.path.join(BASE_DIR, ".env")
+    if not os.path.exists(env_path):
+        return
+
+    with open(env_path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_env_from_file()
+
+
 class Config:
     """
     Base configuration
@@ -15,10 +40,7 @@ class Config:
         "rahma-secret-key"
     )
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL",
-        f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
-    )
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
