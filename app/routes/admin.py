@@ -61,13 +61,14 @@ def dashboard():
         "total_gallery_items": Media.query.count(),
         "total_prayer_requests": PrayerRequest.query.count(),
         "total_messages": ContactMessage.query.count(),
+        "total_giving": Giving.query.count(),
     })
 
 
 @admin_bp.route("/sermons", methods=["POST"])
 @admin_required
 def create_sermon():
-    data = request.form.to_dict(flat=True)
+    data = request.get_json(silent=True) or request.form.to_dict(flat=True) or {}
     title = data.get("title")
     if not title:
         return jsonify({"message": "title is required"}), 400
@@ -101,7 +102,7 @@ def list_sermons():
 @admin_required
 def update_sermon(sermon_id):
     sermon = Sermon.query.get_or_404(sermon_id)
-    data = request.form.to_dict(flat=True)
+    data = request.get_json(silent=True) or request.form.to_dict(flat=True) or {}
     if "image_file" in request.files and request.files["image_file"].filename:
         try:
             sermon.image_url = save_image_upload(request.files["image_file"], "sermons")
@@ -126,7 +127,7 @@ def delete_sermon(sermon_id):
 @admin_bp.route("/events", methods=["POST"])
 @admin_required
 def create_event():
-    data = request.form.to_dict(flat=True)
+    data = request.get_json(silent=True) or request.form.to_dict(flat=True) or {}
     title = data.get("title")
     if not title:
         return jsonify({"message": "title is required"}), 400
@@ -139,9 +140,10 @@ def create_event():
             return jsonify({"message": str(exc)}), 400
 
     event_date = None
-    if data.get("event_date"):
+    raw_date = data.get("event_date") or data.get("start_date")
+    if raw_date:
         try:
-            event_date = datetime.fromisoformat(data["event_date"])
+            event_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00").strip())
         except ValueError:
             event_date = None
 
@@ -168,7 +170,7 @@ def list_events():
 @admin_required
 def update_event(event_id):
     event = Event.query.get_or_404(event_id)
-    data = request.form.to_dict(flat=True)
+    data = request.get_json(silent=True) or request.form.to_dict(flat=True) or {}
     if "image_file" in request.files and request.files["image_file"].filename:
         try:
             event.image_url = save_image_upload(request.files["image_file"], "events")
@@ -177,9 +179,10 @@ def update_event(event_id):
     for field in ["title", "description", "location", "image_url"]:
         if field in data and data[field] not in {None, ""}:
             setattr(event, field, data[field])
-    if "event_date" in data and data["event_date"] not in {None, ""}:
+    raw_date = data.get("event_date") or data.get("start_date")
+    if raw_date not in {None, ""}:
         try:
-            event.event_date = datetime.fromisoformat(data["event_date"])
+            event.event_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00").strip())
         except ValueError:
             return jsonify({"message": "event_date must be an ISO-8601 datetime"}), 400
     db.session.commit()
@@ -248,6 +251,13 @@ def delete_gallery_item(item_id):
     db.session.delete(media)
     db.session.commit()
     return jsonify({"message": "Gallery item deleted"})
+
+
+@admin_bp.route("/pages", methods=["GET"])
+@admin_required
+def list_pages():
+    pages = Page.query.order_by(Page.id.asc()).all()
+    return jsonify({"items": [page.to_dict() for page in pages]})
 
 
 @admin_bp.route("/pages", methods=["POST"])

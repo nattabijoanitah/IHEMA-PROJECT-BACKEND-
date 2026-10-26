@@ -22,6 +22,8 @@ class Event(db.Model):
             "description": self.description,
             "location": self.location,
             "event_date": self.event_date.isoformat() if self.event_date else None,
+            "start_date": self.event_date.isoformat() if self.event_date else None,
             "image_url": self.image_url,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+

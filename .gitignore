@@ -11,6 +11,11 @@ __pycache__/
 
 # Database files
 *.sqlite3
+app.db
+instance/
+
+# Uploaded files (stored locally; use cloud storage in production)
+app/static/uploads/
 
 # IDE settings
 .vscode/

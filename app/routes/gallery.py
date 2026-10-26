@@ -5,7 +5,8 @@ from app.models.settings import Media
 gallery_bp = Blueprint("gallery", __name__)
 
 
-@gallery_bp.route("/")
+@gallery_bp.route("", strict_slashes=False)
+@gallery_bp.route("/", strict_slashes=False)
 def get_gallery():
     items = Media.query.order_by(Media.id.desc()).all()
-    return jsonify({"items": [item.to_dict() for item in items]})
+    return jsonify({"items": [item.to_dict() for item in items]})

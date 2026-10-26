@@ -104,6 +104,8 @@ class Page(db.Model):
 
             "is_published": self.is_published,
 
+            "status": "published" if self.is_published else "draft",
+
             "is_homepage": self.is_homepage
 
         }
