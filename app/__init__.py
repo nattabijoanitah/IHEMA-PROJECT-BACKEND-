@@ -111,6 +111,10 @@ def create_app():
             "message": "Ihema API is running successfully"
         }
 
+    @app.route("/api/health")
+    def health():
+        return {"status": "ok"}, 200
+
     @app.before_request
     def handle_preflight():
         if request.method == "OPTIONS":
